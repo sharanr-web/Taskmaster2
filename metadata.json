@@ -1,0 +1,8 @@
+{
+  "name": "Remix Taskmation",
+  "description": "A community platform where animators tackle monthly challenges, upload video submissions, and receive structured feedback and likes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
