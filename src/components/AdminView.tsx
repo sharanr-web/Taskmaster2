@@ -15,7 +15,10 @@ import {
   AlertCircle,
   Save,
   XCircle,
-  Check
+  Check,
+  Trash2,
+  AlertTriangle,
+  Eye
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Submission, Challenge } from '../types';
@@ -29,6 +32,7 @@ export const AdminView: React.FC = () => {
     updateSubmissionStatus, 
     toggleStaffPick,
     createChallenge,
+    deleteSubmission,
     setSelectedSubmission,
     setActiveTab
   } = useApp();
@@ -50,6 +54,8 @@ export const AdminView: React.FC = () => {
     'Good anticipation and nice spacing on takeoff. The ball could have slightly more squash on impact. Try increasing the contrast between the first hesitant hop and the big rebound.'
   );
   const [feedbackSavedNotice, setFeedbackSavedNotice] = useState(false);
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
+  const [submissionToDelete, setSubmissionToDelete] = useState<Submission | null>(null);
 
   // New Challenge Form States
   const [newTitle, setNewTitle] = useState('');
@@ -85,6 +91,20 @@ export const AdminView: React.FC = () => {
   }
 
   const overallCalculated = ((timingScore + spacingScore + arcsScore + creativityScore) / 4).toFixed(1);
+
+  const handleConfirmDelete = () => {
+    if (!submissionToDelete) return;
+    const res = deleteSubmission(submissionToDelete.id);
+    if (res.success) {
+      setDeleteNotice(`Successfully deleted "${submissionToDelete.title}" by ${submissionToDelete.userName}.`);
+      if (selectedSubForReview?.id === submissionToDelete.id) {
+        const remaining = submissions.filter(s => s.id !== submissionToDelete.id);
+        setSelectedSubForReview(remaining[0] || null);
+      }
+      setTimeout(() => setDeleteNotice(null), 4000);
+    }
+    setSubmissionToDelete(null);
+  };
 
   const handleSaveFeedback = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +172,21 @@ export const AdminView: React.FC = () => {
   return (
     <div className="space-y-8 py-6">
       {/* Admin Top Header & KPI Stats */}
+      {deleteNotice && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-4 h-4 text-rose-400" />
+            <span>{deleteNotice}</span>
+          </div>
+          <button 
+            onClick={() => setDeleteNotice(null)}
+            className="text-neutral-400 hover:text-white text-xs font-bold"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -305,7 +340,7 @@ export const AdminView: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleStaffPick(selectedSubForReview.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                         selectedSubForReview.isStaffPick
                           ? 'bg-amber-500 text-neutral-950'
                           : 'bg-neutral-800 text-amber-400 hover:bg-neutral-700'
@@ -313,6 +348,15 @@ export const AdminView: React.FC = () => {
                     >
                       <Award className="w-4 h-4" />
                       <span>{selectedSubForReview.isStaffPick ? 'Staff Pick Awarded' : 'Award Staff Pick'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setSubmissionToDelete(selectedSubForReview)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Delete animation"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
@@ -523,15 +567,23 @@ export const AdminView: React.FC = () => {
                           setSelectedSubForReview(sub);
                           setActiveAdminTab('queue');
                         }}
-                        className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 font-semibold"
+                        className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 font-semibold cursor-pointer"
                       >
                         Grade
                       </button>
                       <button
                         onClick={() => setSelectedSubmission(sub)}
-                        className="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white"
+                        className="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white cursor-pointer"
                       >
                         Watch
+                      </button>
+                      <button
+                        onClick={() => setSubmissionToDelete(sub)}
+                        className="px-2 py-1 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 flex items-center gap-1 cursor-pointer"
+                        title="Delete animation"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
                       </button>
                     </td>
                   </tr>
@@ -663,6 +715,50 @@ export const AdminView: React.FC = () => {
               Publish Challenge to Community
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {submissionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-sm">
+          <div className="max-w-md w-full p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">Delete Animation</h3>
+                <span className="text-xs text-neutral-400">Admin Permission Action</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-neutral-300 leading-relaxed">
+              Are you sure you want to permanently delete <strong>"{submissionToDelete.title}"</strong> created by <strong>{submissionToDelete.userName}</strong>?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-400 space-y-1">
+              <p>• Removes this video clip and mentor scores from public galleries.</p>
+              <p>• Resets the 1-animation monthly upload limit for this animator so they can submit a replacement.</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setSubmissionToDelete(null)}
+                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-lg shadow-rose-500/20"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Confirm & Delete</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

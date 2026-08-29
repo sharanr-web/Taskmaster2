@@ -21,7 +21,9 @@ import {
   ShieldCheck,
   Send,
   Sliders,
-  Eye
+  Eye,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Submission } from '../types';
@@ -35,7 +37,8 @@ export const VideoPlayerModal: React.FC = () => {
     addComment, 
     setIsAuthModalOpen,
     setActiveTab,
-    toggleStaffPick
+    toggleStaffPick,
+    deleteSubmission
   } = useApp();
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -50,6 +53,7 @@ export const VideoPlayerModal: React.FC = () => {
   const [showArcOverlay, setShowArcOverlay] = useState(false);
   const [showGridOverlay, setShowGridOverlay] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const FPS = selectedSubmission?.fps || 24;
 
@@ -629,6 +633,76 @@ export const VideoPlayerModal: React.FC = () => {
                   <span className="font-semibold text-white">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</span>
                 </div>
               </div>
+
+              {/* Admin Actions Panel */}
+              {currentUser?.role === 'admin' && (
+                <div className="p-4 rounded-xl bg-neutral-950 border border-amber-500/30 space-y-3">
+                  <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Admin Controls</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setSelectedSubmission(null);
+                        setActiveTab('admin');
+                      }}
+                      className="py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>Grade Panel</span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleStaffPick(selectedSubmission.id)}
+                      className={`py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                        selectedSubmission.isStaffPick
+                          ? 'bg-neutral-800 text-amber-400 border border-amber-500/40'
+                          : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800'
+                      }`}
+                    >
+                      <Award className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{selectedSubmission.isStaffPick ? 'Staff Pick' : 'Staff Pick'}</span>
+                    </button>
+                  </div>
+
+                  {/* Delete Button */}
+                  {!isConfirmingDelete ? (
+                    <button
+                      onClick={() => setIsConfirmingDelete(true)}
+                      className="w-full py-2 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Animation (Admin)</span>
+                    </button>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 space-y-2 text-left">
+                      <p className="text-[11px] text-rose-300 font-medium">
+                        Delete this animation? This removes it and allows the user to re-submit this month.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            deleteSubmission(selectedSubmission.id);
+                            setIsConfirmingDelete(false);
+                            setSelectedSubmission(null);
+                          }}
+                          className="flex-1 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] cursor-pointer"
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          onClick={() => setIsConfirmingDelete(false)}
+                          className="flex-1 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-[11px] cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

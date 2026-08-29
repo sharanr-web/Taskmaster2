@@ -1,9 +1,9 @@
 import React from 'react';
-import { Film, Sparkles, Database, Github, Heart, RefreshCw, ExternalLink, Shield } from 'lucide-react';
+import { Film, Sparkles, Layers, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Footer: React.FC = () => {
-  const { setIsSupabaseModalOpen, resetAllData, setActiveTab } = useApp();
+  const { resetAllData, setActiveTab } = useApp();
 
   return (
     <footer className="border-t border-neutral-900 bg-neutral-950 text-neutral-400 text-xs mt-20">
@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={() => setActiveTab('challenge')} 
-                  className="hover:text-amber-400 transition-colors text-left"
+                  className="hover:text-amber-400 transition-colors text-left cursor-pointer"
                 >
                   August 2026: Bouncing Ball
                 </button>
@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={() => setActiveTab('gallery')} 
-                  className="hover:text-amber-400 transition-colors text-left"
+                  className="hover:text-amber-400 transition-colors text-left cursor-pointer"
                 >
                   Public Submission Gallery
                 </button>
@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={() => setActiveTab('leaderboard')} 
-                  className="hover:text-amber-400 transition-colors text-left"
+                  className="hover:text-amber-400 transition-colors text-left cursor-pointer"
                 >
                   Global Animator Leaderboard
                 </button>
@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={() => setActiveTab('submit')} 
-                  className="hover:text-amber-400 transition-colors text-left"
+                  className="hover:text-amber-400 transition-colors text-left cursor-pointer"
                 >
                   Submit Monthly Animation (MP4/WebM)
                 </button>
@@ -65,30 +65,25 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 3: Architecture & GitHub */}
+          {/* Col 3: Animation Principles & Standards */}
           <div>
-            <h4 className="font-display font-bold text-white text-xs uppercase tracking-wider mb-3">Stack Architecture</h4>
+            <h4 className="font-display font-bold text-white text-xs uppercase tracking-wider mb-3">Standards & Principles</h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-1.5 text-neutral-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                <span>Frontend: Next.js + React + Tailwind</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>24 FPS Standard Playback</span>
               </li>
               <li className="flex items-center gap-1.5 text-neutral-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Database: Supabase PostgreSQL</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>12 Principles Evaluation</span>
               </li>
               <li className="flex items-center gap-1.5 text-neutral-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                <span>Storage: Supabase Direct Object Storage</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>Direct MP4/WebM Video Player</span>
               </li>
-              <li>
-                <button 
-                  onClick={() => setIsSupabaseModalOpen(true)}
-                  className="text-amber-400 hover:text-amber-300 underline font-medium flex items-center gap-1 mt-1"
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  <span>View Supabase SQL & RLS Specs</span>
-                </button>
+              <li className="flex items-center gap-1.5 text-neutral-300">
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>Structured Mentor Scorecards</span>
               </li>
             </ul>
           </div>
@@ -102,14 +97,14 @@ export const Footer: React.FC = () => {
             <button
               id="footer-btn-reset-demo"
               onClick={() => {
-                if (window.confirm('Reset all demo submissions, challenges, and user states to initial pristine defaults?')) {
+                if (window.confirm('Reset all challenge submissions and states to initial pristine defaults?')) {
                   resetAllData();
                 }
               }}
-              className="px-2.5 py-1.5 rounded border border-neutral-800 bg-neutral-900/80 hover:bg-neutral-800 text-[11px] text-neutral-400 hover:text-neutral-200 flex items-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 rounded border border-neutral-800 bg-neutral-900/80 hover:bg-neutral-800 text-[11px] text-neutral-400 hover:text-neutral-200 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
-              <span>Reset Demo State</span>
+              <span>Reset State</span>
             </button>
           </div>
         </div>
@@ -117,7 +112,7 @@ export const Footer: React.FC = () => {
         <div className="pt-8 border-t border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-400">
           <p>© 2026 Taskmation. Built for animators worldwide. Master the 12 Principles of Animation.</p>
           <div className="flex items-center gap-4">
-            <span className="text-neutral-400">Designed for GitHub & Vercel Free Stack Deployment</span>
+            <span className="text-neutral-400">Taskmation Animation Community Platform</span>
           </div>
         </div>
       </div>

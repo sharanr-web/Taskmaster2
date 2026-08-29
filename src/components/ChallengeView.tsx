@@ -13,7 +13,9 @@ import {
   ArrowRight,
   ExternalLink,
   Info,
-  Archive
+  Archive,
+  Eye,
+  Lock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Challenge } from '../types';
@@ -25,11 +27,15 @@ export const ChallengeView: React.FC = () => {
     setSelectedChallengeId, 
     setActiveTab, 
     setIsAuthModalOpen,
-    currentUser 
+    currentUser,
+    getUserSubmissionForChallenge,
+    setSelectedSubmission 
   } = useApp();
 
   const currentChallenge = challenges.find(c => c.id === selectedChallengeId) || challenges[0];
   const [activeTabSub, setActiveTabSub] = useState<'brief' | 'references' | 'guidelines' | 'archive'>('brief');
+
+  const userSubmission = currentUser ? getUserSubmissionForChallenge(currentUser.id, currentChallenge.id) : undefined;
 
   return (
     <div className="space-y-8 py-6">
@@ -66,19 +72,30 @@ export const ChallengeView: React.FC = () => {
         {/* Quick CTA */}
         <div className="mt-8 flex flex-wrap items-center gap-4">
           {currentChallenge.status === 'active' ? (
-            <button
-              onClick={() => {
-                if (!currentUser) {
-                  setIsAuthModalOpen(true);
-                } else {
-                  setActiveTab('submit');
-                }
-              }}
-              className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
-            >
-              <UploadCloud className="w-4 h-4 stroke-[2.5]" />
-              <span>Submit Your Animation</span>
-            </button>
+            userSubmission ? (
+              <button
+                onClick={() => setSelectedSubmission(userSubmission)}
+                className="px-6 py-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>View My Monthly Submission</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!currentUser) {
+                    setIsAuthModalOpen(true);
+                  } else {
+                    setSelectedChallengeId(currentChallenge.id);
+                    setActiveTab('submit');
+                  }
+                }}
+                className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
+              >
+                <UploadCloud className="w-4 h-4 stroke-[2.5]" />
+                <span>Submit Your Animation</span>
+              </button>
+            )
           ) : (
             <div className="px-4 py-2.5 rounded-xl bg-neutral-800 text-neutral-400 text-xs font-semibold">
               Submissions for this challenge are closed. Check the active challenge!
@@ -87,7 +104,7 @@ export const ChallengeView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('gallery')}
-            className="px-5 py-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-200 font-bold text-xs sm:text-sm border border-neutral-700 transition-colors"
+            className="px-5 py-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-200 font-bold text-xs sm:text-sm border border-neutral-700 transition-colors cursor-pointer"
           >
             Explore Submissions ({currentChallenge.totalSubmissions})
           </button>
@@ -288,6 +305,9 @@ export const ChallengeView: React.FC = () => {
             </p>
             <p>
               4. <strong>File Size Limits:</strong> Videos must be under 100MB to comply with free cloud object storage architecture.
+            </p>
+            <p>
+              5. <strong>One Animation Entry Per Month:</strong> Each animator can upload exactly one animation per monthly challenge. Focus on polishing timing, arcs, and weight before uploading your single monthly entry!
             </p>
           </div>
         </div>

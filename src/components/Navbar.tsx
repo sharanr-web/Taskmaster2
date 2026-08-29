@@ -12,7 +12,6 @@ import {
   Calendar, 
   ChevronDown, 
   LogOut, 
-  Database,
   Menu,
   X,
   Palette
@@ -27,7 +26,6 @@ export const Navbar: React.FC = () => {
     activeTab, 
     setActiveTab, 
     setIsAuthModalOpen, 
-    setIsSupabaseModalOpen,
     isTemplateModalOpen,
     setIsTemplateModalOpen,
     currentTheme,
@@ -131,17 +129,6 @@ export const Navbar: React.FC = () => {
             <span className="text-white font-bold truncate max-w-[100px] sm:max-w-none">
               {activeThemeConfig.name.split(' ')[0]}
             </span>
-          </button>
-
-          {/* Supabase Architecture Drawer trigger */}
-          <button
-            id="nav-btn-supabase-guide"
-            onClick={() => setIsSupabaseModalOpen(true)}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900/80 hover:bg-neutral-800 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
-            title="View Supabase PostgreSQL Schema & Vercel Deploy Spec"
-          >
-            <Database className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Supabase Stack</span>
           </button>
 
           {/* Submit Button */}
@@ -354,16 +341,6 @@ export const Navbar: React.FC = () => {
             <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
               Change
             </span>
-          </button>
-          <button
-            onClick={() => {
-              setIsSupabaseModalOpen(true);
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-neutral-300 hover:bg-neutral-900"
-          >
-            <Database className="w-4 h-4 text-emerald-400" />
-            <span>Supabase Architecture & SQL</span>
           </button>
 
           {!currentUser ? (

@@ -19,7 +19,6 @@ import { LoginView } from './components/LoginView';
 import { SignupView } from './components/SignupView';
 import { VideoPlayerModal } from './components/VideoPlayerModal';
 import { AuthModal } from './components/AuthModal';
-import { SupabaseGuideModal } from './components/SupabaseGuideModal';
 import { TemplateShowcaseModal } from './components/TemplateShowcaseModal';
 
 const AppContent: React.FC = () => {
@@ -66,7 +65,6 @@ const AppContent: React.FC = () => {
       {/* Global Modals & Overlays */}
       <VideoPlayerModal />
       <AuthModal />
-      <SupabaseGuideModal />
       <TemplateShowcaseModal />
     </div>
   );

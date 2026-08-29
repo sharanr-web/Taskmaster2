@@ -55,7 +55,6 @@ interface AppContextType {
   
   setSelectedSubmission: (sub: Submission | null) => void;
   setIsAuthModalOpen: (open: boolean) => void;
-  setIsSupabaseModalOpen: (open: boolean) => void;
   setIsTemplateModalOpen: (open: boolean) => void;
   setSelectedChallengeId: (id: string) => void;
   setSearchQuery: (query: string) => void;
@@ -65,6 +64,8 @@ interface AppContextType {
   // Community Actions
   toggleLike: (submissionId: string) => void;
   addComment: (submissionId: string, text: string) => void;
+  hasUserSubmittedForMonth: (userId: string, challengeId: string) => boolean;
+  getUserSubmissionForChallenge: (userId: string, challengeId: string) => Submission | undefined;
   submitAnimation: (data: {
     challengeId: string;
     title: string;
@@ -73,9 +74,10 @@ interface AppContextType {
     thumbnailUrl: string;
     software: string;
     durationSeconds?: number;
-  }) => Submission;
+  }) => { success: boolean; message?: string; submission?: Submission };
   
   // Admin Actions
+  deleteSubmission: (submissionId: string) => { success: boolean; message?: string };
   saveMentorFeedback: (feedback: Omit<MentorFeedback, 'id' | 'createdAt'>) => void;
   updateSubmissionStatus: (submissionId: string, status: SubmissionStatus) => void;
   toggleStaffPick: (submissionId: string) => void;
@@ -132,7 +134,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState<boolean>(false);
   const [selectedChallengeId, setSelectedChallengeId] = useState<string>('challenge-august-2026');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -338,6 +339,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const hasUserSubmittedForMonth = (userId: string, challengeId: string): boolean => {
+    const targetChallenge = challenges.find(c => c.id === challengeId);
+    if (!targetChallenge) return false;
+    return submissions.some(
+      s => s.userId === userId && (s.challengeId === challengeId || s.challengeMonthYear === targetChallenge.monthYear)
+    );
+  };
+
+  const getUserSubmissionForChallenge = (userId: string, challengeId: string): Submission | undefined => {
+    const targetChallenge = challenges.find(c => c.id === challengeId);
+    return submissions.find(
+      s => s.userId === userId && (s.challengeId === challengeId || (targetChallenge && s.challengeMonthYear === targetChallenge.monthYear))
+    );
+  };
+
   const submitAnimation = (data: {
     challengeId: string;
     title: string;
@@ -346,9 +362,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     thumbnailUrl: string;
     software: string;
     durationSeconds?: number;
-  }): Submission => {
-    const user = currentUser || users[0];
+  }): { success: boolean; message?: string; submission?: Submission } => {
+    const user = currentUser;
+    if (!user) {
+      return { success: false, message: 'You must be signed in to submit an animation.' };
+    }
+
     const targetChallenge = challenges.find(c => c.id === data.challengeId) || challenges[0];
+
+    // Enforce one animation per user per month
+    const alreadySubmitted = submissions.some(
+      s => s.userId === user.id && (s.challengeId === targetChallenge.id || s.challengeMonthYear === targetChallenge.monthYear)
+    );
+
+    if (alreadySubmitted) {
+      return {
+        success: false,
+        message: `You have already submitted an animation for ${targetChallenge.monthYear}. Animators are limited to one entry per monthly challenge.`
+      };
+    }
 
     const newSub: Submission = {
       id: `sub-${Date.now()}`,
@@ -398,7 +430,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return c;
     }));
 
-    return newSub;
+    return { success: true, submission: newSub, message: 'Animation submitted successfully!' };
+  };
+
+  const deleteSubmission = (submissionId: string): { success: boolean; message?: string } => {
+    if (currentUser?.role !== 'admin') {
+      return { success: false, message: 'Only administrators have permission to delete animations.' };
+    }
+
+    const target = submissions.find(s => s.id === submissionId);
+    if (!target) {
+      return { success: false, message: 'Submission not found.' };
+    }
+
+    // Remove from submissions state
+    setSubmissions(prev => prev.filter(s => s.id !== submissionId));
+
+    // Clear selected if open
+    if (selectedSubmission?.id === submissionId) {
+      setSelectedSubmission(null);
+    }
+
+    // Decrement creator submission count
+    setUsers(prev => prev.map(u => {
+      if (u.id === target.userId) {
+        return {
+          ...u,
+          totalSubmissions: Math.max(0, u.totalSubmissions - 1)
+        };
+      }
+      return u;
+    }));
+
+    // Decrement challenge total submissions
+    setChallenges(prev => prev.map(c => {
+      if (c.id === target.challengeId) {
+        return {
+          ...c,
+          totalSubmissions: Math.max(0, c.totalSubmissions - 1)
+        };
+      }
+      return c;
+    }));
+
+    return { success: true, message: `Animation "${target.title}" was deleted by administrator.` };
   };
 
   const saveMentorFeedback = (feedbackData: Omit<MentorFeedback, 'id' | 'createdAt'>) => {
@@ -477,7 +552,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentTheme,
         selectedSubmission,
         isAuthModalOpen,
-        isSupabaseModalOpen,
         isTemplateModalOpen,
         selectedChallengeId,
         searchQuery,
@@ -492,7 +566,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logout,
         setSelectedSubmission,
         setIsAuthModalOpen,
-        setIsSupabaseModalOpen,
         setIsTemplateModalOpen,
         setSelectedChallengeId,
         setSearchQuery,
@@ -500,7 +573,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedSoftwareFilter,
         toggleLike,
         addComment,
+        hasUserSubmittedForMonth,
+        getUserSubmissionForChallenge,
         submitAnimation,
+        deleteSubmission,
         saveMentorFeedback,
         updateSubmissionStatus,
         toggleStaffPick,
