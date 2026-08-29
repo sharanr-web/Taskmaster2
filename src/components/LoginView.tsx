@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, ADMIN_EMAIL } from '../context/AppContext';
 import { 
   Lock, 
   Mail, 
@@ -14,19 +14,16 @@ import {
   Flame,
   ArrowLeft,
   KeyRound,
-  AlertCircle
+  AlertCircle,
+  UserPlus
 } from 'lucide-react';
-import { User } from '../types';
 
 export const LoginView: React.FC = () => {
   const { 
     loginWithEmail, 
     loginWithGoogle, 
-    users, 
-    switchUser, 
     currentUser, 
     setActiveTab, 
-    currentTheme 
   } = useApp();
 
   const [email, setEmail] = useState('');
@@ -51,7 +48,7 @@ export const LoginView: React.FC = () => {
     }
 
     if (!password) {
-      setErrorMessage('Please enter your password.');
+      setErrorMessage('Please enter your account password.');
       return;
     }
 
@@ -59,32 +56,39 @@ export const LoginView: React.FC = () => {
 
     setTimeout(() => {
       setIsLoading(false);
-      const success = loginWithEmail(email.trim());
-      if (success) {
-        setSuccessMessage('Login successful! Redirecting to your profile...');
+      const res = loginWithEmail(email.trim(), password);
+      if (res.success && res.user) {
+        setSuccessMessage(`Welcome back, ${res.user.name}! Redirecting...`);
         setTimeout(() => {
-          setActiveTab('profile');
+          if (res.user?.role === 'admin') {
+            setActiveTab('admin');
+          } else {
+            setActiveTab('profile');
+          }
         }, 600);
       } else {
-        setErrorMessage('Invalid credentials or user not found. Try one of the demo accounts below.');
+        setErrorMessage(res.message || 'Invalid email or password. Please check your credentials or register a new account.');
       }
-    }, 450);
-  };
-
-  const handleQuickLogin = (user: User) => {
-    switchUser(user.id);
-    setSuccessMessage(`Signed in as ${user.name} (${user.role === 'admin' ? 'Mentor / Admin' : 'Animator'})`);
-    setTimeout(() => {
-      setActiveTab('profile');
-    }, 500);
+    }, 400);
   };
 
   const handleGoogleAuth = () => {
-    loginWithGoogle();
-    setSuccessMessage('Authenticated with Google. Redirecting to profile...');
-    setTimeout(() => {
-      setActiveTab('profile');
-    }, 500);
+    const res = loginWithGoogle(email.trim() || undefined);
+    if (res.success && res.user) {
+      setSuccessMessage(`Signed in via Google as ${res.user.name}. Redirecting...`);
+      setTimeout(() => {
+        if (res.user?.role === 'admin') {
+          setActiveTab('admin');
+        } else {
+          setActiveTab('profile');
+        }
+      }, 500);
+    }
+  };
+
+  const handleFillAdminEmail = () => {
+    setEmail(ADMIN_EMAIL);
+    setPassword('admin123');
   };
 
   const handleForgotSubmit = (e: React.FormEvent) => {
@@ -124,10 +128,10 @@ export const LoginView: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-neutral-100 tracking-tight">
-                  Welcome Back to Taskmation
+                  Sign In to Taskmation
                 </h1>
                 <p className="text-xs sm:text-sm text-neutral-400 mt-0.5">
-                  Sign in to submit your animation, review challenges & check mentor feedback
+                  Access your monthly animation submissions, mentor grading & creator streak
                 </p>
               </div>
             </div>
@@ -172,7 +176,7 @@ export const LoginView: React.FC = () => {
                   d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z"
                 />
               </svg>
-              <span>Continue with Google</span>
+              <span>Sign In with Google</span>
             </button>
 
             <div className="relative flex items-center justify-center mb-6">
@@ -195,7 +199,7 @@ export const LoginView: React.FC = () => {
                     id="login-email-input"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. sharan.r@icat.ac.in or animator@gmail.com"
+                    placeholder="Enter your account email"
                     required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-neutral-950/80 border border-neutral-700/80 text-neutral-100 text-xs sm:text-sm placeholder:text-neutral-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                   />
@@ -248,7 +252,7 @@ export const LoginView: React.FC = () => {
                 </label>
 
                 <span className="text-[11px] text-neutral-500">
-                  Secured with SSL
+                  Secured Authentication
                 </span>
               </div>
 
@@ -286,92 +290,80 @@ export const LoginView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: 1-Click Persona Quick-Logins & Community Perks */}
+        {/* Right Column: Account Types & Admin Access */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Quick Demo Persona Switcher */}
-          <div className="bg-neutral-900/90 border border-neutral-800 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-center gap-2.5 mb-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h2 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
-                Instant Demo Account Logins
-              </h2>
+          {/* Admin Account Direct Access */}
+          <div className="bg-gradient-to-b from-amber-500/10 via-neutral-900 to-neutral-950 border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Lead Mentor / Admin Account
+                </h2>
+                <p className="text-[11px] text-amber-300/80">Authorized email: {ADMIN_EMAIL}</p>
+              </div>
             </div>
-            <p className="text-xs text-neutral-400 mb-4">
-              Click any verified animator profile below to instantly test the platform with full privileges:
+
+            <p className="text-xs text-neutral-300 leading-relaxed">
+              The administrator account grants complete authority over monthly challenge creation, submission approval, frame-by-frame rubric scoring, and Staff Pick awards.
             </p>
 
-            <div className="space-y-2.5">
-              {users.slice(0, 4).map((user) => {
-                const isSelected = currentUser?.id === user.id;
-
-                return (
-                  <button
-                    key={user.id}
-                    id={`quick-login-${user.id}`}
-                    onClick={() => handleQuickLogin(user)}
-                    className={`w-full p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-amber-500/15 border-amber-500/60 ring-1 ring-amber-500/40'
-                        : 'bg-neutral-950/60 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60'
-                    }`}
-                  >
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      referrerPolicy="no-referrer"
-                      className="w-10 h-10 rounded-full object-cover border border-neutral-700"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-neutral-200 truncate">{user.name}</span>
-                        {user.role === 'admin' ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            Admin / Mentor
-                          </span>
-                        ) : (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-neutral-800 text-neutral-400">
-                            Animator
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-neutral-500 block truncate">{user.email}</span>
-                    </div>
-
-                    <div className="text-right">
-                      {isSelected ? (
-                        <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Logged In
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200">
-                          Sign In &rarr;
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              type="button"
+              id="fill-admin-creds-btn"
+              onClick={handleFillAdminEmail}
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Fill Admin Email ({ADMIN_EMAIL})</span>
+            </button>
           </div>
 
-          {/* Membership Benefits */}
-          <div className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-6 space-y-4">
+          {/* New User Account Creation Banner */}
+          <div className="bg-neutral-900/90 border border-neutral-800 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                <UserPlus className="w-4 h-4" />
+              </div>
+              <h2 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
+                New Animator Registration
+              </h2>
+            </div>
+            
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Every animator creates their own individual profile to track monthly submissions, build streaks, unlock milestone badges, and receive detailed mentor feedback.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('signup')}
+              className="w-full py-2.5 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-100 text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Register Your Animator Account</span>
+              <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+            </button>
+          </div>
+
+          {/* Community Perks */}
+          <div className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-6 space-y-3">
             <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              What You Get with Taskmation
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              What You Get with Your Account
             </h3>
             <ul className="space-y-2.5 text-xs text-neutral-400">
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span><strong>Monthly Rigged Prompts:</strong> Industry briefs focused on core principles (squash, anticipation, follow-through).</span>
+                <span><strong>Challenge Submissions:</strong> Upload MP4 files or links for monthly animation assignments.</span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span><strong>Frame-Accurate Mentor Feedback:</strong> Direct feedback timestamps, rubric grading & staff pick badges.</span>
+                <span><strong>Private Mentor Reviews:</strong> Detailed breakdown on Timing, Spacing, Arcs & Creativity.</span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span><strong>Artist Portfolio:</strong> Verified showcase archive of your progression and community streaks.</span>
+                <span><strong>Leaderboard & Streaks:</strong> Build month-over-month streaks and earn recognition.</span>
               </li>
             </ul>
           </div>

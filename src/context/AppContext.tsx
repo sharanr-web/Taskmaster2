@@ -16,6 +16,8 @@ import {
   TEMPLATE_DESIGNS
 } from '../data/initialData';
 
+export const ADMIN_EMAIL = 'sharan.r@icat.ac.in';
+
 interface AppContextType {
   currentUser: User | null;
   users: User[];
@@ -36,11 +38,11 @@ interface AppContextType {
   setActiveTab: (tab: NavigationTab) => void;
   setCurrentTheme: (theme: TemplateTheme) => void;
   setCurrentUser: (user: User | null) => void;
-  switchUser: (userId: string) => void;
-  loginWithEmail: (email: string, name?: string) => boolean;
+  loginWithEmail: (email: string, password?: string) => { success: boolean; message?: string; user?: User };
   registerUser: (data: {
     name: string;
     email: string;
+    password?: string;
     role?: 'user' | 'admin';
     avatar?: string;
     bio?: string;
@@ -48,7 +50,7 @@ interface AppContextType {
     portfolioUrl?: string;
     experienceLevel?: string;
   }) => { success: boolean; message?: string; user?: User };
-  loginWithGoogle: () => void;
+  loginWithGoogle: (email?: string, name?: string) => { success: boolean; user?: User };
   logout: () => void;
   
   setSelectedSubmission: (sub: Submission | null) => void;
@@ -84,13 +86,21 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'taskmation_state_v1';
+const STORAGE_KEY = 'taskmation_state_v2';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Load from localStorage or initial
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_users`);
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // fallback
+      }
+    }
+    return INITIAL_USERS;
   });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -102,7 +112,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return null;
       }
     }
-    // Default to unauthenticated / normal visitor page
     return null;
   });
 
@@ -161,44 +170,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [submissions]);
 
-  const switchUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
-    }
-  };
+  const loginWithEmail = (email: string, password?: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase();
 
-  const loginWithEmail = (email: string, name?: string) => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
+
     if (existing) {
-      setCurrentUser(existing);
+      // If user has a password set, verify if password provided
+      if (existing.password && password && existing.password !== password) {
+        return { success: false, message: 'Incorrect password. Please try again.' };
+      }
+      
+      // Ensure admin role if matching admin email
+      const verifiedUser: User = isAdmin ? { ...existing, role: 'admin' } : existing;
+      if (isAdmin && existing.role !== 'admin') {
+        setUsers(prev => prev.map(u => u.id === existing.id ? verifiedUser : u));
+      }
+
+      setCurrentUser(verifiedUser);
       setIsAuthModalOpen(false);
-      return true;
-    } else {
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        name: name || email.split('@')[0],
-        email: email,
-        avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
-        bio: 'Passionate 2D/3D Animator eager to master movement and timing.',
-        role: 'user',
-        streakMonths: 1,
-        badges: ['first-submission'],
-        totalSubmissions: 0,
-        staffPicksCount: 0,
-        joinedDate: 'August 2026',
-        softwareUsed: ['Blender']
-      };
-      setUsers(prev => [...prev, newUser]);
-      setCurrentUser(newUser);
-      setIsAuthModalOpen(false);
-      return true;
+      return { success: true, user: verifiedUser };
     }
+
+    // If user entered admin email but not in list yet, create official Admin user
+    if (isAdmin) {
+      const adminUser: User = {
+        id: 'user-admin',
+        name: 'Sharan Kumar',
+        email: ADMIN_EMAIL,
+        password: password || 'admin123',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        bio: 'Lead Animator & Taskmation Admin. 8+ years animating in Maya, Blender & 2D cut-out.',
+        role: 'admin',
+        streakMonths: 8,
+        badges: ['admin', 'streak-6', 'staff-pick', 'top-mentor', 'challenge-10'],
+        totalSubmissions: 12,
+        staffPicksCount: 4,
+        joinedDate: 'January 2026',
+        softwareUsed: ['Blender', 'Autodesk Maya', 'Toon Boom Harmony']
+      };
+      setUsers(prev => [adminUser, ...prev.filter(u => u.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase())]);
+      setCurrentUser(adminUser);
+      setIsAuthModalOpen(false);
+      return { success: true, user: adminUser };
+    }
+
+    return { 
+      success: false, 
+      message: 'No account found with this email address. Please create a new animator account first.' 
+    };
   };
 
   const registerUser = (data: {
     name: string;
     email: string;
+    password?: string;
     role?: 'user' | 'admin';
     avatar?: string;
     bio?: string;
@@ -206,10 +233,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     portfolioUrl?: string;
     experienceLevel?: string;
   }) => {
-    const existing = users.find(u => u.email.toLowerCase() === data.email.toLowerCase());
+    const cleanEmail = data.email.trim().toLowerCase();
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
     if (existing) {
-      return { success: false, message: 'An account with this email address already exists. Please login instead.' };
+      return { success: false, message: 'An account with this email address already exists. Please sign in instead.' };
     }
+
+    const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase();
 
     const defaultAvatars = [
       'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
@@ -219,14 +249,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ];
 
     const newUser: User = {
-      id: `user-${Date.now()}`,
-      name: data.name.trim() || 'New Animator',
-      email: data.email.trim(),
+      id: isAdmin ? 'user-admin' : `user-${Date.now()}`,
+      name: data.name.trim() || (isAdmin ? 'Sharan Kumar' : 'New Animator'),
+      email: cleanEmail,
+      password: data.password || 'password123',
       avatar: data.avatar || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)],
-      bio: data.bio?.trim() || 'Passionate Animator exploring movement, physics, and storytelling.',
-      role: data.role || 'user',
-      streakMonths: 1,
-      badges: ['first-submission', 'community-builder'],
+      bio: data.bio?.trim() || (isAdmin ? 'Lead Animator & Taskmation Admin.' : 'Passionate Animator exploring movement, physics, and storytelling.'),
+      role: isAdmin ? 'admin' : (data.role || 'user'),
+      streakMonths: isAdmin ? 8 : 1,
+      badges: isAdmin ? ['admin', 'top-mentor'] : ['first-submission', 'community-builder'],
       totalSubmissions: 0,
       staffPicksCount: 0,
       joinedDate: 'August 2026',
@@ -241,11 +272,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, user: newUser };
   };
 
-  const loginWithGoogle = () => {
-    // Quick demo login as Priya or Rahul
-    const sample = users[1] || users[0];
-    setCurrentUser(sample);
-    setIsAuthModalOpen(false);
+  const loginWithGoogle = (email?: string, name?: string) => {
+    const targetEmail = email || ADMIN_EMAIL;
+    const targetName = name || (targetEmail === ADMIN_EMAIL ? 'Sharan Kumar' : targetEmail.split('@')[0]);
+
+    const result = loginWithEmail(targetEmail);
+    if (result.success && result.user) {
+      return { success: true, user: result.user };
+    } else {
+      return registerUser({
+        name: targetName,
+        email: targetEmail,
+        password: 'google-oauth-auth'
+      });
+    }
   };
 
   const logout = () => {
@@ -307,7 +347,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     software: string;
     durationSeconds?: number;
   }): Submission => {
-    const user = currentUser || users[1];
+    const user = currentUser || users[0];
     const targetChallenge = challenges.find(c => c.id === data.challengeId) || challenges[0];
 
     const newSub: Submission = {
@@ -446,7 +486,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab,
         setCurrentTheme,
         setCurrentUser,
-        switchUser,
         loginWithEmail,
         registerUser,
         loginWithGoogle,

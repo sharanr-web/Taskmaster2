@@ -31,8 +31,6 @@ export const Navbar: React.FC = () => {
     isTemplateModalOpen,
     setIsTemplateModalOpen,
     currentTheme,
-    switchUser,
-    users,
     logout,
     submissions 
   } = useApp();
@@ -247,35 +245,6 @@ export const Navbar: React.FC = () => {
                       </button>
                     )}
 
-                    {/* Quick Demo Persona Switcher */}
-                    <div className="border-t border-neutral-800/80 my-1 pt-1">
-                      <div className="px-2.5 py-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                        Switch Persona (Instant Testing)
-                      </div>
-                      {users.map(u => (
-                        <button
-                          key={u.id}
-                          onClick={() => {
-                            switchUser(u.id);
-                            setIsUserMenuOpen(false);
-                          }}
-                          className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between text-[11px] ${
-                            currentUser.id === u.id 
-                              ? 'bg-amber-500/10 text-amber-300 font-bold' 
-                              : 'text-neutral-300 hover:bg-neutral-800'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <img src={u.avatar} alt={u.name} className="w-4 h-4 rounded-full" />
-                            <span>{u.name}</span>
-                          </div>
-                          <span className="text-[10px] text-neutral-400 font-mono">
-                            {u.role === 'admin' ? 'Mentor' : 'Animator'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
                     <div className="border-t border-neutral-800/80 pt-1 mt-1 space-y-1">
                       <button
                         onClick={() => {
@@ -285,7 +254,7 @@ export const Navbar: React.FC = () => {
                         className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-2"
                       >
                         <UserIcon className="w-3.5 h-3.5 text-neutral-400" />
-                        <span>Login to Another Account</span>
+                        <span>Sign In to Another Account</span>
                       </button>
                       <button
                         onClick={() => {
@@ -295,7 +264,7 @@ export const Navbar: React.FC = () => {
                         className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-neutral-800 text-amber-300 flex items-center gap-2"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Register New Profile</span>
+                        <span>Create New Account</span>
                       </button>
                       <button
                         id="menu-btn-logout"

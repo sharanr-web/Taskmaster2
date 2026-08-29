@@ -29,7 +29,8 @@ export const AdminView: React.FC = () => {
     updateSubmissionStatus, 
     toggleStaffPick,
     createChallenge,
-    setSelectedSubmission 
+    setSelectedSubmission,
+    setActiveTab
   } = useApp();
 
   const [activeAdminTab, setActiveAdminTab] = useState<'queue' | 'all-submissions' | 'challenges' | 'new-challenge'>('queue');
@@ -63,14 +64,22 @@ export const AdminView: React.FC = () => {
 
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="py-20 text-center space-y-4 max-w-md mx-auto">
-        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
-          <ShieldCheck className="w-6 h-6" />
+      <div className="py-20 text-center space-y-4 max-w-md mx-auto px-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
+          <ShieldCheck className="w-7 h-7" />
         </div>
         <h2 className="font-display text-2xl font-bold text-white">Admin Privileges Required</h2>
-        <p className="text-xs text-neutral-400">
-          You are currently signed in as <strong>{currentUser?.name || 'Guest'}</strong>. To access the admin review and grading dashboard, switch to <strong>Sharan Kumar (Admin)</strong> using the top-right profile switcher.
+        <p className="text-xs text-neutral-400 leading-relaxed">
+          You are currently {currentUser ? `signed in as ${currentUser.name}` : 'not signed in'}. The Studio Admin & Mentor Review panel is restricted to the administrator account (<strong>sharan.r@icat.ac.in</strong>).
         </p>
+        <div className="pt-2">
+          <button
+            onClick={() => setActiveTab('login')}
+            className="py-2.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-2"
+          >
+            <span>Sign In with Admin Account</span>
+          </button>
+        </div>
       </div>
     );
   }

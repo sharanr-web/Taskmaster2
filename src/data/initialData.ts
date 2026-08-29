@@ -122,7 +122,7 @@ export const TEMPLATE_DESIGNS: TemplateDesignOption[] = [
 
 export const INITIAL_USERS: User[] = [
   {
-    id: 'user-sharan',
+    id: 'user-admin',
     name: 'Sharan Kumar',
     email: 'sharan.r@icat.ac.in',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
@@ -134,62 +134,6 @@ export const INITIAL_USERS: User[] = [
     staffPicksCount: 4,
     joinedDate: 'January 2026',
     softwareUsed: ['Blender', 'Autodesk Maya', 'Toon Boom Harmony']
-  },
-  {
-    id: 'user-rahul',
-    name: 'Rahul V.',
-    email: 'rahul.anim@gmail.com',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    bio: 'Junior 3D Character Animator passionate about creature motion and believable squash & stretch.',
-    role: 'user',
-    streakMonths: 6,
-    badges: ['first-submission', 'streak-6', 'challenge-5'],
-    totalSubmissions: 6,
-    staffPicksCount: 1,
-    joinedDate: 'March 2026',
-    softwareUsed: ['Blender', 'Krita']
-  },
-  {
-    id: 'user-priya',
-    name: 'Priya Sharma',
-    email: 'priya.animation@outlook.com',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    bio: '2D Hand-drawn & Traditional Animator. Obsessed with snappy timing charts and liquid motion.',
-    role: 'user',
-    streakMonths: 7,
-    badges: ['first-submission', 'streak-6', 'staff-pick', 'top-creator'],
-    totalSubmissions: 7,
-    staffPicksCount: 3,
-    joinedDate: 'February 2026',
-    softwareUsed: ['Toon Boom Harmony', 'TVPaint', 'After Effects']
-  },
-  {
-    id: 'user-arjun',
-    name: 'Arjun Mehta',
-    email: 'arjun.3d@artstation.com',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    bio: 'Game Animator & Rigging Specialist. Crafting snappy fighting games and physical weight mechanics.',
-    role: 'user',
-    streakMonths: 4,
-    badges: ['first-submission', 'challenge-5'],
-    totalSubmissions: 4,
-    staffPicksCount: 1,
-    joinedDate: 'May 2026',
-    softwareUsed: ['Autodesk Maya', 'Unreal Engine 5']
-  },
-  {
-    id: 'user-elena',
-    name: 'Elena Rostova',
-    email: 'elena.rostova@motion.io',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    bio: 'Motion Designer & Experimental Animator. Blending 3D particles with classical timing.',
-    role: 'user',
-    streakMonths: 5,
-    badges: ['first-submission', 'staff-pick'],
-    totalSubmissions: 5,
-    staffPicksCount: 2,
-    joinedDate: 'April 2026',
-    softwareUsed: ['Cinema 4D', 'After Effects']
   }
 ];
 

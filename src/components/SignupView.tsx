@@ -112,13 +112,16 @@ export const SignupView: React.FC = () => {
     setTimeout(() => {
       setIsLoading(false);
       const avatarFinal = customAvatarUrl.trim() || selectedAvatar;
+      const cleanEmail = email.trim().toLowerCase();
+      const isAdminEmail = cleanEmail === 'sharan.r@icat.ac.in';
 
       const result = registerUser({
         name: name.trim(),
-        email: email.trim().toLowerCase(),
-        role: role,
+        email: cleanEmail,
+        password: password,
+        role: isAdminEmail ? 'admin' : role,
         avatar: avatarFinal,
-        bio: bio.trim() || 'Passionate Animator exploring movement, physics, and storytelling.',
+        bio: bio.trim() || (isAdminEmail ? 'Lead Animator & Taskmation Admin.' : 'Passionate Animator exploring movement, physics, and storytelling.'),
         softwareUsed: selectedSoftware.length > 0 ? selectedSoftware : ['Blender'],
         portfolioUrl: portfolioUrl.trim(),
         experienceLevel: experienceLevel
@@ -127,7 +130,11 @@ export const SignupView: React.FC = () => {
       if (result.success) {
         setSuccessMessage(`Account created successfully! Welcome to Taskmation, ${name}.`);
         setTimeout(() => {
-          setActiveTab('profile');
+          if (isAdminEmail || role === 'admin') {
+            setActiveTab('admin');
+          } else {
+            setActiveTab('profile');
+          }
         }, 800);
       } else {
         setErrorMessage(result.message || 'Registration failed.');
@@ -584,13 +591,13 @@ export const SignupView: React.FC = () => {
 
           <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-800 text-center space-y-3">
             <p className="text-xs text-neutral-400">
-              Need immediate access for grading or reviewing?
+              Already have an account or signing in as Lead Admin?
             </p>
             <button
               onClick={() => setActiveTab('login')}
-              className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-200 border border-neutral-700 transition-colors"
+              className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-200 border border-neutral-700 transition-colors cursor-pointer"
             >
-              Use 1-Click Demo Accounts
+              Sign In to Your Account
             </button>
           </div>
         </div>
